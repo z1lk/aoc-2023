@@ -8,5 +8,5 @@ s = Aoc2023::One.new
 #puts s.part1(s.example_input("24b"))
 #puts s.part1(s.real_input)
 #puts s.part2(s.example_input)
-#puts s.part2(s.example_input("24b"))
+#puts s.part2(s.example_input("01b"))
 #puts s.part2(s.real_input)
