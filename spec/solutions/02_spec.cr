@@ -1,6 +1,6 @@
 require "../spec_helper"
 
-describe Aoc2023::One do
+describe Aoc2023::Two do
   describe "#part1" do
     it "equals" do
       s2.part1(s2.example_input).should eq 8
