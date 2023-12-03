@@ -4,7 +4,7 @@ class Aoc2023::One < Aoc2023::Solution
   end
 
   WORDS = [ "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" ]
-  WORDS_R = WORDS.map { |w| w.reverse }
+  WORDS_R = WORDS.map(&.reverse)
 
   def part1(input)
     input.map do |str|
@@ -23,7 +23,7 @@ class Aoc2023::One < Aoc2023::Solution
     pats = [/\d/].concat (last ? WORDS_R : WORDS).map { |w| Regex.literal(w) }
     md = pats.compact_map { |p| str.match(p) }.min_by(&.begin)
     m = md[0]
-    return m if m.size == 1
+    return m if m.size == 1 # single-digit char
     (last ? WORDS_R : WORDS).index!(m) + 1
   end
 end
