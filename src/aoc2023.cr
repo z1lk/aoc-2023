@@ -73,11 +73,11 @@ require "./solutions/*"
 require "./helpers/*"
 
 def day_class(i)
-  Aoc2023::Solution.all.find { |s| s.day_int.to_i == i.to_i }
+  Aoc2023::Solution.all.find { |s| s.day_int.rjust(2, '0') == i.to_s.rjust(2, '0') }
 end
 
 def day(i)
   klass = day_class(i)
-  raise "day #{i} not found" unless klass
+  raise "day \"#{i}\" not found" unless klass
   klass.new
 end

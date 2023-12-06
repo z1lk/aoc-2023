@@ -20,20 +20,25 @@ module Aoc2023
       self.class.day_int
     end
 
-    def test_input
-      read_input("test/#{day_int}")
+    def test_input(ver)
+      read_input("test/#{day_int}#{ver}")
     end
 
-    def example_input(filename : Nil | String = day_int)
-      read_input("example/#{filename}")
+    def example_input(ver)
+      read_input("example/#{day_int}#{ver}")
     end
 
-    def real_input
-      read_input(day_int)
+    def real_input(ver)
+      read_input("#{day_int}#{ver}")
     end
 
-    def read_input(input)
-      File.read_lines("inputs/#{input}")
+    def read_input(input : String | Char)
+      fn = "inputs/#{input}"
+      unless File.exists?(fn)
+        STDERR.puts "input \"#{input}\" not found!"
+        exit 1
+      end
+      File.read_lines(fn)
     end
 
     #abstract def parse_input(input)
@@ -42,22 +47,19 @@ module Aoc2023
 
     abstract def part2(lines)
 
-    def solve(part : Int32, input_type = :real)
+    def solve(part : Int32, input_type = :real, input_ver = "")
       input = 
         case input_type
-        when :real then real_input
-        when :example then example_input
-        when :test then test_input
-        when String
-          read_input(input_type)
+        when :real then real_input(input_ver)
+        when :example then example_input(input_ver)
+        when :test then test_input(input_ver)
+        when :filename then read_input(input_ver)
         else
-          real_input
+          raise "unknown input type \"#{input_type}\""
         end
       case part
-      when 1
-        part1 input
-      when 2
-        part2 input
+      when 1 then part1(input)
+      when 2 then part2(input)
       end
     end
 
@@ -65,15 +67,12 @@ module Aoc2023
       solve(part)
     end
 
-    def example(part : Int32, input_type = :example)
-      if input_type.is_a?(String)
-        input_type = "example/#{input_type}"
-      end
-      solve(part, input_type)
+    def example(part : Int32, input_ver = "")
+      solve(part, :example, input_ver)
     end
 
-    def test(part : Int32)
-      solve(part, :test)
+    def test(part : Int32, input_ver = "")
+      solve(part, :test, input_ver)
     end
   end
 end
