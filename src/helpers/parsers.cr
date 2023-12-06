@@ -1,21 +1,21 @@
 module Aoc2023
-  class InputParsers
-    def self.map(file)
+  class Parsers
+    def self.map(lines)
       map = Array(Array(Char)).new
-      File.read_lines(file).map do |line|
+      lines.map do |line|
         map << line.chars
       end
-      map
+      Map.new(map)
     end
-    def self.pattern(file, pattern)
-      File.read_lines(file).compact_map do |line|
+    def self.pattern(lines, pattern)
+      lines.compact_map do |line|
         m = line.match(pattern)
         m.nil? ? nil : yield(m)
       end
     end
-    def self.groups(file)
+    def self.groups(lines)
       groups = [] of Array(String)
-      File.read_lines(file).each do |line|
+      lines.each do |line|
         if line.strip.empty?
           groups << [] of String
           next

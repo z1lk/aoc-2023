@@ -1,10 +1,10 @@
 class Aoc2023::Three < Aoc2023::Solution
-  def parse_input(input)
-    Map(Char).new(InputParsers.map(input))
+  def parse(lines)
+    Parsers.map(lines)
   end
 
-  def part1(input)
-    map = input
+  def part1(lines)
+    map = parse lines
     nums = get_nums(map)
     parts = [] of Int32
     nums.each do |start, len|
@@ -22,8 +22,8 @@ class Aoc2023::Three < Aoc2023::Solution
     parts.sum
   end
 
-  def part2(input)
-    map = input
+  def part2(lines)
+    map = parse lines
     nums = get_nums(map)
     ratios = [] of Int32
     map.find_all('*').each do |coord|

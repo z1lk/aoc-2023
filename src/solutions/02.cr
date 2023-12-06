@@ -1,9 +1,9 @@
 class Aoc2023::Two < Aoc2023::Solution
   alias Hand = Hash(String, Int32)
-  def parse_input(input)
+  def parse(lines)
     #((?:\d+ \w+,? ?);?)+
     games = Hash(Int32, Array(Hand)).new
-    InputParsers.pattern(input, /Game (\d+): (.*)\Z/) do |m|
+    Parsers.pattern(lines, /Game (\d+): (.*)\Z/) do |m|
       gid = m[1].to_i
       games[gid] = [] of Hand
       m[2].split("; ").each do |hand|
@@ -18,7 +18,8 @@ class Aoc2023::Two < Aoc2023::Solution
     games
   end
 
-  def part1(input)
+  def part1(lines)
+    input = parse lines
     input.select do |id, hands|
       hands.none? do |hand|
         hand["red"] > 12 || hand["green"] > 13 || hand["blue"] > 14
@@ -26,7 +27,8 @@ class Aoc2023::Two < Aoc2023::Solution
     end.keys.sum
   end
 
-  def part2(input)
+  def part2(lines)
+    input = parse lines
     input.map do |id, hands|
       r = g = b = 0
       hands.each do |hand|

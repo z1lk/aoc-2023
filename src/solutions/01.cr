@@ -1,19 +1,15 @@
 class Aoc2023::One < Aoc2023::Solution
-  def parse_input(input)
-    File.read_lines(input)
-  end
-
   WORDS = [ "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" ]
   WORDS_R = WORDS.map(&.reverse)
 
-  def part1(input)
-    input.map do |str|
+  def part1(lines)
+    lines.map do |str|
       [str.match!(/\d/)[0], str.reverse.match!(/\d/)[0]].join.to_i
     end.sum
   end
 
-  def part2(input)
-    input.map do |str|
+  def part2(lines)
+    lines.map do |str|
       [find_digit(str), find_digit(str, true)].join.to_i
     end.sum
   end

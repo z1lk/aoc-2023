@@ -34,6 +34,8 @@ def debug_i(*args) # interactive
   gets
 end
 
+require "./solution.cr"
+
 module Aoc2023
   VERSION = "0.1.0"
 
@@ -64,9 +66,18 @@ module Aoc2023
     "TwentyFour" => "24",
     "TwentyFive" => "25"
   }
-
 end
 
 require "./solution"
 require "./solutions/*"
 require "./helpers/*"
+
+def day_class(i)
+  Aoc2023::Solution.all.find { |s| s.day_int.to_i == i.to_i }
+end
+
+def day(i)
+  klass = day_class(i)
+  raise "day #{i} not found" unless klass
+  klass.new
+end

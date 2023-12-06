@@ -1,10 +1,10 @@
 class Aoc2023::Five < Aoc2023::Solution
   alias Range64 = Range(Int64, Int64)
-  def parse_input(input)
+  def parse(lines)
     seeds = [] of Int64
     maps = Hash(String, Hash(Range64, Range64)).new
 
-    InputParsers.groups(input).each do |group|
+    Parsers.groups(lines).each do |group|
       case header = group.shift
       when /seeds:/
         seeds = header.split(": ")[1].split.map(&.to_i64)
@@ -31,8 +31,8 @@ class Aoc2023::Five < Aoc2023::Solution
 
   CATS = ["seed", "soil", "fertilizer", "water", "light", "temperature", "humidity", "location"]
 
-  def part1(input)
-    seeds, maps = input
+  def part1(lines)
+    seeds, maps = parse lines
     seed_locations = Hash(Int64, Int64).new
     seeds.each do |seed|
       seed_locations[seed] = CATS.each_cons_pair.reduce(seed) do |value, (a, b)|
@@ -50,8 +50,8 @@ class Aoc2023::Five < Aoc2023::Solution
     seed_locations.values.min
   end
 
-  def part2(input)
-    seeds, maps = input
+  def part2(lines)
+    seeds, maps = parse lines
 
     # convert seeds to range format for part 2
     seed_ranges = seeds.each_slice(2).map do |(a, b)|
@@ -84,7 +84,7 @@ class Aoc2023::Five < Aoc2023::Solution
     end
 
     # splitting ranges accounted for all paths through the mapping.
-    # the lowest locatoin is necessarily the lowest #begin of the all location ranges.
+    # the lowest location is necessarily the lowest #begin of the all location ranges.
     loc_ranges.map(&.begin).min
   end
 

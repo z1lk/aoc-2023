@@ -1,6 +1,6 @@
 class Aoc2023::Four < Aoc2023::Solution
-  def parse_input(input)
-    InputParsers.pattern(input, /Card\s+(\d+):((?:\s+\d+)+)\s+\|((?:\s+\d+)+)/) do |m|
+  def parse(lines)
+    Parsers.pattern(lines, /Card\s+(\d+):((?:\s+\d+)+)\s+\|((?:\s+\d+)+)/) do |m|
       {
         m[1].to_i,
         m[2].strip.split.map(&.to_i),
@@ -9,7 +9,8 @@ class Aoc2023::Four < Aoc2023::Solution
     end
   end
 
-  def part1(input)
+  def part1(lines)
+    input = parse lines
     input.sum do |(n, a, b)|
       match = a.&(b).size
       next 0 unless match > 0
@@ -17,7 +18,8 @@ class Aoc2023::Four < Aoc2023::Solution
     end
   end
 
-  def part2(input)
+  def part2(lines)
+    input = parse lines
     copies = Hash(Int32, Int32).new(0)
     input.each do |(n, a, b)|
       a.&(b).size.times do |i|
