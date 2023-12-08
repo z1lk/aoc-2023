@@ -35,9 +35,11 @@ OptionParser.parse do |parser|
   end
 end
 
-t = Time.local
-if day_flag == -1 && t.year == 2023 && t.month == 12 && t.day <= 25
-  day_flag = t.day
+if day_flag == -1
+  t = Time.local Time::Location.load("America/New_York")
+  if t.year == 2023 && t.month == 12 && t.day <= 25
+    day_flag = t.day
+  end
 end
 
 if day_flag == -1
