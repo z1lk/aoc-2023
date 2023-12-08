@@ -9,7 +9,11 @@ module Aoc2023
     end
 
     def self.day_int
-      DAYS[day_word]
+      DAYS.index!(day_word) + 1
+    end
+
+    def self.day_int_padded
+      day_int.to_s.rjust(2, '0')
     end
 
     def day_word
@@ -20,16 +24,20 @@ module Aoc2023
       self.class.day_int
     end
 
+    def day_int_padded
+      self.class.day_int_padded
+    end
+
     def test_input(ver)
-      read_input("test/#{day_int}#{ver}")
+      read_input("test/#{day_int_padded}#{ver}")
     end
 
     def example_input(ver)
-      read_input("example/#{day_int}#{ver}")
+      read_input("example/#{day_int_padded}#{ver}")
     end
 
     def real_input(ver)
-      read_input("#{day_int}#{ver}")
+      read_input("#{day_int_padded}#{ver}")
     end
 
     def read_input(input : String | Char)

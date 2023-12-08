@@ -39,33 +39,33 @@ require "./solution.cr"
 module Aoc2023
   VERSION = "0.1.0"
 
-  DAYS = {
-    "One" => "01",
-    "Two" => "02",
-    "Three" => "03",
-    "Four" => "04",
-    "Five" => "05",
-    "Six" => "06",
-    "Seven" => "07",
-    "Eight" => "08",
-    "Nine" => "09",
-    "Ten" => "10",
-    "Eleven" => "11",
-    "Twelve" => "12",
-    "Thirteen" => "13",
-    "Fourteen" => "14",
-    "Fifteen" => "15",
-    "Sixteen" => "16",
-    "Seventeen" => "17",
-    "Eighteen" => "18",
-    "Nineteen" => "19",
-    "Twenty" => "20",
-    "TwentyOne" => "21",
-    "TwentyTwo" => "22",
-    "TwentyThree" => "23",
-    "TwentyFour" => "24",
-    "TwentyFive" => "25"
-  }
+  DAYS = [
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+    "Twenty",
+    "TwentyOne",
+    "TwentyTwo",
+    "TwentyThree",
+    "TwentyFour",
+    "TwentyFive"
+  ]
 end
 
 require "./solution"
@@ -73,7 +73,7 @@ require "./solutions/*"
 require "./helpers/*"
 
 def day_class(i)
-  Aoc2023::Solution.all.find { |s| s.day_int.rjust(2, '0') == i.to_s.rjust(2, '0') }
+  Aoc2023::Solution.all.find { |s| s.day_int_padded == i.to_s.rjust(2, '0') }
 end
 
 def day(i)
