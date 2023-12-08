@@ -1,4 +1,7 @@
 solve
 
+.env
+lib/
+
 *.swp
 *.swo
