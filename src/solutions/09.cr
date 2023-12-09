@@ -1,27 +1,20 @@
 class Aoc2023::Nine < Aoc2023::Solution
   def parse(lines)
-    lines.map do |line|
-      line.split(' ').map(&.to_i32)
-    end
+    lines.map { |l| l.split.map(&.to_i) }
   end
 
   def part1(lines)
-    parse(lines).map { |l| extrapolate(l) }.sum
+    parse(lines).sum { |l| extrapolate(l) }
   end
 
   def part2(lines)
-    parse(lines).map { |l| extrapolate(l, true) }.sum
+    parse(lines).sum { |l| extrapolate(l.reverse) }
   end
 
-  def extrapolate(line, left = false)
+  def extrapolate(line)
     return 0 if line.all?(&.zero?)
 
     diff = line.each_cons_pair.to_a.map { |(a,b)| b - a }
-    diff_e = extrapolate(diff, left)
-    if left
-      line.first - diff_e
-    else
-      line.last + diff_e
-    end
+    line.last + extrapolate(diff)
   end
 end
