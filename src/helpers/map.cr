@@ -11,12 +11,12 @@ module Aoc2023
     SOUTH = {x: +0, y: +1}
     WEST  = {x: -1, y: +0}
 
-    property map : Hash(Int32, Hash(Int32, Array(T)))
+    property map : Hash(Int32, Hash(Int32, T | Nil))
 
     getter min_y : Int32, max_y : Int32, min_x : Int32, max_x : Int32
 
     def initialize()
-      @map = Hash(Int32, Hash(Int32, Array(T))).new
+      @map = Hash(Int32, Hash(Int32, T | Nil)).new
       @min_y = 0
       @max_y = 0
       @min_x = 0
@@ -24,25 +24,9 @@ module Aoc2023
     end
 
     def initialize(map : Array(Array(T)))
-      @map = Hash(Int32, Hash(Int32, Array(T))).new
+      @map = Hash(Int32, Hash(Int32, T | Nil)).new
       map.each.with_index do |row, y|
-        @map[y] = Hash(Int32, Array(T)).new
-        row.each.with_index do |tile, x|
-          @map[y][x] = [tile]
-        end
-      end
-      y_a = @map.keys
-      x_a = @map.values.map(&.keys).flatten.uniq
-      @min_y = y_a.min
-      @max_y = y_a.max
-      @min_x = x_a.min
-      @max_x = x_a.max
-    end
-
-    def initialize(map : Array(Array(Array(T))))
-      @map = Hash(Int32, Hash(Int32, Array(T))).new
-      map.each.with_index do |row, y|
-        @map[y] = Hash(Int32, Array(T)).new
+        @map[y] = Hash(Int32, T | Nil).new
         row.each.with_index do |tile, x|
           @map[y][x] = tile
         end
@@ -59,11 +43,11 @@ module Aoc2023
       @map == other.map
     end
 
-    def extend_bounds(coord)
+    def extend_bounds(c)
       #y_a = @map.keys
       #x_a = @map.values.map(&.keys).flatten.uniq
-      y_a = [coord[:y], min_y, max_y]
-      x_a = [coord[:x], min_x, max_x]
+      y_a = [c[:x], min_y, max_y]
+      x_a = [c[:y], min_x, max_x]
       @min_y = y_a.min
       @max_y = y_a.max
       @min_x = x_a.min
@@ -75,15 +59,16 @@ module Aoc2023
       max_y = UNREACHABLE
       min_x = UNREACHABLE
       max_x = UNREACHABLE
-      each do |coord, tiles|
-        min_y = coord[:y] if min_y == UNREACHABLE
-        max_y = coord[:y] if max_y == UNREACHABLE
-        min_x = coord[:x] if min_x == UNREACHABLE
-        max_x = coord[:x] if max_x == UNREACHABLE
-        min_y = coord[:y] if min_y > coord[:y]
-        max_y = coord[:y] if max_y < coord[:y]
-        min_x = coord[:x] if min_x > coord[:x]
-        max_x = coord[:x] if max_x < coord[:x]
+      each do |c, t|
+        next if t.nil?
+        min_y = c[:y] if min_y == UNREACHABLE
+        max_y = c[:y] if max_y == UNREACHABLE
+        min_x = c[:x] if min_x == UNREACHABLE
+        max_x = c[:x] if max_x == UNREACHABLE
+        min_y = c[:y] if min_y > c[:y]
+        max_y = c[:y] if max_y < c[:y]
+        min_x = c[:x] if min_x > c[:x]
+        max_x = c[:x] if max_x < c[:x]
       end
       @min_y = min_y
       @max_y = max_y
@@ -91,147 +76,124 @@ module Aoc2023
       @max_x = max_x
     end
 
-    def get!(coord : Coord, default : T | Nil = nil)
-      if (row = map[coord[:y]]?)
-        if (val = row[coord[:x]]?)
-          return val
-        end
-      end
-      raise "no #{T} at #{coord}"
+    def get!(coord : Coord)
+      t = get(coord)
+      raise "no #{T} at #{coord}" if t.nil?
+      t
     end
 
     def get(coord : Coord, default : T | Nil = nil)
       if (row = map[coord[:y]]?)
-        if (val = row[coord[:x]]?)
-          return val
+        if (t = row[coord[:x]]?)
+          return t
         end
       end
-      if default.nil?
-        [] of T
-      else
-        [default]
-      end
+      default
     end
 
-    def set(coord : Coord, val : T)
-      map[coord[:y]] ||= Hash(Int32, Array(T)).new
-      map[coord[:y]][coord[:x]] ||= Array(T).new
-      map[coord[:y]][coord[:x]] << val
+    def in_bounds?(coord : Coord)
+      x, y = coord[:x], coord[:y]
+      x >= min_x && x <= max_x && y >= min_y && y <= max_y
+    end
+
+    def set(coord : Coord, val : T | Nil)
+      x, y = coord[:x], coord[:y]
+      map[y] ||= Hash(Int32, T | Nil).new
+      map[y][x] = val
       extend_bounds(coord)
     end
 
-    def reset(coord : Coord, prune : Bool = true)
+    def unset(coord : Coord, prune = true)
       x, y = coord[:x], coord[:y]
       return if map[y]?.nil?
       return if map[y][x]?.nil?
+      set(coord, nil)
       if prune
         map[y].delete(x)
-        map.delete(y)
-      else
-        map[y][x] = Array(T).new
+        map.delete(y) if map[y].empty?
       end
-      true
-    end
-
-    def unset(coord : Coord, val : T, prune = true)
-      x, y = coord[:x], coord[:y]
-      return if map[y]?.nil?
-      return if map[y][x]?.nil?
-      map[y][x].delete val
-      map[y].delete(x) if map[y][x].empty? if prune
-      map.delete(y) if map[y].empty? if prune
       true
     end
 
     def fill(tile : T)
-      each do |coord, tiles|
-        set(coord, tile) if tiles.empty?
+      each do |c, t|
+        set(c, tile) if t.nil?
       end
     end
 
-    def flood(coord, char, char2)
-      reset(coord, false)
-      set(coord, char2)
-      neighbors(coord).each do |n_coord|
-        tile = get!(n_coord)[0]
-        flood(n_coord, char, char2) if tile == char
+    def flood(c, t2, diagonal = false)
+      set(c, t2)
+      neighbors(c, diagonal).each do |nc, nt|
+        next unless in_bounds?(nc)
+        flood(nc, t2) if nt.nil?
       end
     end
 
     def find(tile : T)
-      each do |coord, tiles|
-        return coord if tiles.includes?(tile)
+      each do |c, t|
+        return c if tile == t
       end
     end
 
     def find_all(tile : T)
       coords = [] of Coord
-      each do |coord, tiles|
-        coords << coord if tiles.includes?(tile)
+      each do |c, t|
+        coords << c if tile == t
       end
       coords
     end
 
     #def all_y; map.keys; end
     #def all_x; map.values.flatten.map(&.keys).flatten.uniq; end
-    def all_y; min_x.upto(max_x).to_a; end
-    def all_x; min_y.upto(max_y).to_a; end
+    #def all_y; min_x.upto(max_x).to_a; end
+    #def all_x; min_y.upto(max_y).to_a; end
 
     def each(default : T | Nil = nil)
       min_y.to(max_y) do |y|
         min_x.to(max_x) do |x|
-          coord = {x: x, y: y}
-          yield coord, get(coord, default)
+          c = {x: x, y: y}
+          yield c, get(c, default)
         end
       end
     end
 
-    def add(coord : Coord, coord2 : Coord)
-      {
-        x: coord[:x] + coord2[:x],
-        y: coord[:y] + coord2[:y]
-      }
+    def add(a : Coord, b : Coord)
+      { x: a[:x] + b[:x], y: a[:y] + b[:y] }
     end
 
-    def diff(coord : Coord, coord2 : Coord)
-      {
-        x: coord[:x] - coord2[:x],
-        y: coord[:y] - coord2[:y]
-      }
+    def diff(a : Coord, b : Coord)
+      { x: a[:x] - b[:x], y: a[:y] - b[:y] }
     end
 
-    def diagonal?(coord : Coord, coord2 : Coord)
-      [
-        {x: -1, y: -1},
-        {x: -1, y: 1},
-        {x: 1, y: -1},
-        {x: 1, y: 1}
-      ].includes?(diff(coord,coord2))
+    ADJ = [
+      {x: 0, y: -1},
+      {x: 0, y: 1},
+      {x: -1, y: 0},
+      {x: 1, y: 0}
+    ]
+    DIAG = [
+      {x: -1, y: -1},
+      {x: -1, y: 1},
+      {x: 1, y: -1},
+      {x: 1, y: 1}
+    ]
+
+    def adjacent?(a : Coord, b : Coord)
+      ADJ.includes?(diff(a,b))
     end
 
-    def neighbors(coord : Coord, diagonal = false, center = false)
-      neighboring_tiles = [
-        {x: 0, y: -1},
-        {x: 0, y: 1},
-        {x: -1, y: 0},
-        {x: 1, y: 0}
-      ]
-      if diagonal
-        neighboring_tiles.concat([
-          {x: -1, y: -1},
-          {x: -1, y: 1},
-          {x: 1, y: -1},
-          {x: 1, y: 1}
-        ])
+    def diagonal?(a : Coord, b : Coord)
+      DIAG.includes?(diff(a,b))
+    end
+
+    def neighbors(c : Coord, diagonal = false)
+      diffs = ADJ.dup
+      diffs.concat(DIAG.dup) if diagonal
+      # diffs.concat([ {x: 0, y: 0} ]) if center
+      diffs.map do |d|
+        n = add(c, d)
+        {n, get(n)}
       end
-      if center
-        neighboring_tiles.concat([
-          {x: 0, y: 0},
-        ])
-      end
-      neighboring_tiles.map do |d|
-        add(coord, d)
-      end.compact
     end
 
     # taxicab dist
@@ -249,7 +211,7 @@ module Aoc2023
       clear = true,
       interval = 0.1,
       outside_bounds = false,
-      decider : Proc(Array(T), Coord, T) | Nil = nil
+      resolver : Proc(Array(T), Coord, T) | Nil = nil
     )
 
       if width && height
@@ -296,22 +258,28 @@ module Aoc2023
             next if y < min_y
             next if y > max_y
           end
-          tiles = get({x: x, y: y})
-          tile =
-            if !decider.nil?
-              decider.call(tiles, {x: x, y: y})
-            elsif tiles.any?
-              tiles[0]
-            else
-              '?'
+          t = get({x: x, y: y})
+          t =
+            if !resolver.nil?
+              resolver.call(t, {x: x, y: y})
+            else t
+              t ? t : '?'
             end
-          debug_buffered tile, print: true
+          debug_buffered t, print: true
         end
       end
 
       sleep interval if interval
       system("clear") if clear
       debug_flush
+    end
+
+    def to_s
+      min_y.to(max_y).map do |y|
+        min_x.to(max_x).map do |x|
+          get({x: x, y: y}, '?').to_s
+        end.join
+      end.join("\n")
     end
   end
 end

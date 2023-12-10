@@ -24,10 +24,9 @@ class Aoc2023::Ten < Aoc2023::Solution
     map = Parsers.map(lines)
     circ = find_circ(map)
     # get rid of all the random bits of pipe
-    map.each do |coord, tiles|
-      next if coord.in?(circ)
-      tiles.each { |t| map.unset(coord, t) }
-      map.set(coord, NONE)
+    map.each do |c, t|
+      next if c.in?(circ)
+      map.set(c, NONE)
     end
     # extend the bounds by 1 and fill with 'O' to make algo smoother
     map.extend_bounds({x: map.min_x - 1, y: map.min_y - 1})
@@ -41,7 +40,7 @@ class Aoc2023::Ten < Aoc2023::Solution
     map.min_y.upto(map.max_y).each do |y|
       map.min_x.upto(map.max_x).each do |x|
         coord = {x: x, y: y}
-        c = map.get!(coord)[0]
+        c = map.get!(coord)
         case c
         when OUT
           outside = true
@@ -50,6 +49,11 @@ class Aoc2023::Ten < Aoc2023::Solution
         when VER
           outside = !outside
         when NE, NW, SW, SE
+          # we're starting or finishing a horizontal section.
+          # this may or may not reverse `outside`, depending on if
+          # the pipe continues in the same direction or turns around.
+          # if it continues, this is essentially a vertical section.
+          # if it turns around, it has closed the loop it opened.
           if hor
             outside = 
               if pipe_ver_dir(c) == pipe_ver_dir(last_corner)
@@ -66,7 +70,6 @@ class Aoc2023::Ten < Aoc2023::Solution
         when HOR
           hor = true
         when NONE
-          map.unset(coord, NONE)
           map.set(coord, outside ? OUT : IN)
         end
       end
@@ -89,17 +92,17 @@ class Aoc2023::Ten < Aoc2023::Solution
   def find_circ(map)
     start = map.find(START)
     raise "start not found" if start.nil?
-    # orient
-    map.unset(start, START)
+
+    # we don't know what kind of pipe the 'S' is on.
+    # attempt to go in each dir.
+    # then we can figure out what pipe is underneath.
+    # fake a vertical/horizontal pipe otherwise the can_go? checks will necessarily fail.
     map.set(start, VER)
     cg_n = can_go_n?(map, start)
     cg_s = can_go_s?(map, start)
-    map.unset(start, VER)
-
     map.set(start, HOR)
     cg_e = can_go_e?(map, start)
     cg_w = can_go_w?(map, start)
-    map.unset(start, HOR)
 
     start_pipe =
       case
@@ -125,6 +128,9 @@ class Aoc2023::Ten < Aoc2023::Solution
     coords
   end
 
+  # find out which way a section of pipe is leading.
+  # last_dir is the previous direction, reversed to
+  # find the dir we're coming from.
   def get_dir(map, coord, last_dir)
     from_dir = {
       Map::NORTH => Map::SOUTH,
@@ -162,13 +168,15 @@ class Aoc2023::Ten < Aoc2023::Solution
     can_go?(map, coord, Map::WEST, [HOR, NW, SW], [HOR, NE, SE])
   end
 
+  # there are unconnected bits of pipe about, so going in a certain
+  # direction requires that the current section is of one kind ("outs"),
+  # and the next section is of another kind ("ins").
   def can_go?(map, coord, dir, outs, ins)
-    tiles = map.get(coord)
-    return false if tiles.empty?
-    tile = tiles[0]
-    return false if !tile.in?(outs)
-    conns = map.get(map.add(coord, dir))
-    return false if conns.empty?
-    conns[0].in?(ins)
+    t = map.get(coord)
+    return false if t.nil? || t == '?'
+    return false if !t.in?(outs)
+    t2 = map.get(map.add(coord, dir))
+    return false if t2.nil? || t2 == '?'
+    t2.in?(ins)
   end
 end

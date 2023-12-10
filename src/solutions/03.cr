@@ -11,10 +11,9 @@ class Aoc2023::Three < Aoc2023::Solution
       sym = false
       len.times do |offset|
         cur = {x: start[:x]+offset, y: start[:y]}
-        map.neighbors(cur, diagonal: true).each do |n|
-          next unless (chars = map.get(n)).any?
-          c = chars[0]
-          sym = true if c != '.' && !c.to_s.matches?(/\d/)
+        map.neighbors(cur, diagonal: true).each do |c, t|
+          next if t.nil?
+          sym = true if t != '.' && !t.to_s.matches?(/\d/)
         end
       end
       parts << num_to_int(map, start, len) if sym
@@ -61,7 +60,7 @@ class Aoc2023::Three < Aoc2023::Solution
   # converts start/len found by get_nums to integer values
   def num_to_int(map, start, len)
     len.times.reduce("") do |s, i|
-      s + map.get({x: start[:x]+i, y: start[:y]})[0]
+      s + map.get!({x: start[:x]+i, y: start[:y]})
     end.to_i
   end
 end
