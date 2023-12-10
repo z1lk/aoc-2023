@@ -7,7 +7,7 @@ ENV["DEBUG"] = "true"
 day_flag = -1
 part = 1
 input_type = :real
-input_ver = ""
+input_ver = nil
 
 OptionParser.parse do |parser|
   parser.on "-h", "--help", "Show help" do
@@ -20,19 +20,19 @@ OptionParser.parse do |parser|
   parser.on("-p PART", "--part PART", "Part 1 or 2 (default 1)") do |p|
     part = p.to_i
   end
-  parser.on("-t", "--test", "Use the day's test input") do |ver|
+  parser.on("-t", "--test", "Use the day's test input") do
     input_type = :test
   end
-  parser.on("-e", "--example", "Use the day's example input") do |ver|
+  parser.on("-e", "--example", "Use the day's example input") do
     input_type = :example
   end
   parser.on("-v VERSION", "--version VERSION", "Use a different version of the day's input (e.g. 01b)") do |ver|
     input_ver = ver
   end
-  parser.on("-i INPUT", "--input INPUT", "Specify the input filename directly") do |ver|
-    input_type = :filename
-    input_ver = ver
-  end
+  #parser.on("-i INPUT", "--input INPUT", "Specify the input filename directly") do |ver|
+  #  input_type = :filename
+  #  input_ver = ver
+  #end
 end
 
 if day_flag == -1

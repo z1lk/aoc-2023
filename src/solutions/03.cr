@@ -42,7 +42,7 @@ class Aoc2023::Three < Aoc2023::Solution
 
   # identify all numbers on the map by pos of first digit and len
   def get_nums(map)
-    nums = Hash(Coords, Int32).new # start, len
+    nums = Hash(Coord, Int32).new # start, len
     map.each do |coord, char|
       next unless char.to_s.matches?(/\d/)
       left = map.get({x: coord[:x] - 1, y: coord[:y]})

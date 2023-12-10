@@ -28,22 +28,25 @@ module Aoc2023
       self.class.day_int_padded
     end
 
-    def test_input(ver)
-      read_input("test/#{day_int_padded}#{ver}")
+    def test_input(ver = nil)
+      read_input("test", day_int_padded, ver)
     end
 
-    def example_input(ver)
-      read_input("example/#{day_int_padded}#{ver}")
+    def example_input(ver = nil)
+      read_input("example", day_int_padded, ver)
     end
 
-    def real_input(ver)
-      read_input("#{day_int_padded}#{ver}")
+    def real_input(ver = nil)
+      read_input("", day_int_padded, ver)
     end
 
-    def read_input(input : String | Char)
-      fn = "inputs/#{input}"
+    def read_input(folder : String, day : String | Char, ver : String | Char | Nil = nil)
+      path = day.to_s
+      path = [folder, path].join("/") if folder
+      path = [path, ver].join("-") if ver
+      fn = "inputs/#{path}"
       unless File.exists?(fn)
-        STDERR.puts "input \"#{input}\" not found!"
+        STDERR.puts "input \"#{path}\" not found!"
         exit 1
       end
       File.read_lines(fn)
@@ -55,13 +58,14 @@ module Aoc2023
 
     abstract def part2(lines)
 
-    def solve(part : Int32, input_type = :real, input_ver = "")
+    def solve(part : Int32, input_type = :real, input_ver = nil)
       input = 
         case input_type
         when :real then real_input(input_ver)
         when :example then example_input(input_ver)
         when :test then test_input(input_ver)
-        when :filename then read_input(input_ver)
+        #when :filename
+        #  read_input("", input_ver)
         else
           raise "unknown input type \"#{input_type}\""
         end
@@ -75,11 +79,11 @@ module Aoc2023
       solve(part)
     end
 
-    def example(part : Int32, input_ver = "")
+    def example(part : Int32, input_ver = nil)
       solve(part, :example, input_ver)
     end
 
-    def test(part : Int32, input_ver = "")
+    def test(part : Int32, input_ver = nil)
       solve(part, :test, input_ver)
     end
   end

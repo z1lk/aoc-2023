@@ -1,10 +1,15 @@
 module Aoc2023
-  alias Coords = NamedTuple(x: Int32, y: Int32)
+  alias Coord = NamedTuple(x: Int32, y: Int32)
 
   UNREACHABLE = Int32::MAX
 
   class Map(T)
     def_clone
+
+    NORTH = {x: +0, y: -1}
+    EAST  = {x: +1, y: +0}
+    SOUTH = {x: +0, y: +1}
+    WEST  = {x: -1, y: +0}
 
     property map : Hash(Int32, Hash(Int32, Array(T)))
 
@@ -86,7 +91,16 @@ module Aoc2023
       @max_x = max_x
     end
 
-    def get(coord : Coords, default : T | Nil = nil)
+    def get!(coord : Coord, default : T | Nil = nil)
+      if (row = map[coord[:y]]?)
+        if (val = row[coord[:x]]?)
+          return val
+        end
+      end
+      raise "no #{T} at #{coord}"
+    end
+
+    def get(coord : Coord, default : T | Nil = nil)
       if (row = map[coord[:y]]?)
         if (val = row[coord[:x]]?)
           return val
@@ -99,14 +113,27 @@ module Aoc2023
       end
     end
 
-    def set(coord : Coords, val : T)
+    def set(coord : Coord, val : T)
       map[coord[:y]] ||= Hash(Int32, Array(T)).new
       map[coord[:y]][coord[:x]] ||= Array(T).new
       map[coord[:y]][coord[:x]] << val
       extend_bounds(coord)
     end
 
-    def unset(coord : Coords, val : T, prune = true)
+    def reset(coord : Coord, prune : Bool = true)
+      x, y = coord[:x], coord[:y]
+      return if map[y]?.nil?
+      return if map[y][x]?.nil?
+      if prune
+        map[y].delete(x)
+        map.delete(y)
+      else
+        map[y][x] = Array(T).new
+      end
+      true
+    end
+
+    def unset(coord : Coord, val : T, prune = true)
       x, y = coord[:x], coord[:y]
       return if map[y]?.nil?
       return if map[y][x]?.nil?
@@ -116,6 +143,21 @@ module Aoc2023
       true
     end
 
+    def fill(tile : T)
+      each do |coord, tiles|
+        set(coord, tile) if tiles.empty?
+      end
+    end
+
+    def flood(coord, char, char2)
+      reset(coord, false)
+      set(coord, char2)
+      neighbors(coord).each do |n_coord|
+        tile = get!(n_coord)[0]
+        flood(n_coord, char, char2) if tile == char
+      end
+    end
+
     def find(tile : T)
       each do |coord, tiles|
         return coord if tiles.includes?(tile)
@@ -123,40 +165,42 @@ module Aoc2023
     end
 
     def find_all(tile : T)
-      coords = [] of Coords
+      coords = [] of Coord
       each do |coord, tiles|
         coords << coord if tiles.includes?(tile)
       end
       coords
     end
 
-    def all_y; map.keys; end
-    def all_x; map.values.flatten.map(&.keys).flatten.uniq; end
+    #def all_y; map.keys; end
+    #def all_x; map.values.flatten.map(&.keys).flatten.uniq; end
+    def all_y; min_x.upto(max_x).to_a; end
+    def all_x; min_y.upto(max_y).to_a; end
 
     def each(default : T | Nil = nil)
-      all_y.min.to(all_y.max) do |y|
-        all_x.min.to(all_x.max) do |x|
+      min_y.to(max_y) do |y|
+        min_x.to(max_x) do |x|
           coord = {x: x, y: y}
           yield coord, get(coord, default)
         end
       end
     end
 
-    def add(coord : Coords, coord2 : Coords)
+    def add(coord : Coord, coord2 : Coord)
       {
         x: coord[:x] + coord2[:x],
         y: coord[:y] + coord2[:y]
       }
     end
 
-    def diff(coord : Coords, coord2 : Coords)
+    def diff(coord : Coord, coord2 : Coord)
       {
         x: coord[:x] - coord2[:x],
         y: coord[:y] - coord2[:y]
       }
     end
 
-    def diagonal?(coord : Coords, coord2 : Coords)
+    def diagonal?(coord : Coord, coord2 : Coord)
       [
         {x: -1, y: -1},
         {x: -1, y: 1},
@@ -165,7 +209,7 @@ module Aoc2023
       ].includes?(diff(coord,coord2))
     end
 
-    def neighbors(coord : Coords, diagonal = false, center = false)
+    def neighbors(coord : Coord, diagonal = false, center = false)
       neighboring_tiles = [
         {x: 0, y: -1},
         {x: 0, y: 1},
@@ -199,12 +243,13 @@ module Aoc2023
       min_width = 9,
       width : Int32 | Nil = nil,
       height : Int32 | Nil = nil,
-      center : Coords | Nil = nil,
+      center : Coord | Nil = nil,
       x_offset : Int32 = 0,
       y_offset : Int32 = 0,
       clear = true,
       interval = 0.1,
-      outside_bounds = false
+      outside_bounds = false,
+      decider : Proc(Array(T), Coord, T) | Nil = nil
     )
 
       if width && height
@@ -252,8 +297,15 @@ module Aoc2023
             next if y > max_y
           end
           tiles = get({x: x, y: y})
-          char = yield(tiles, {x: x, y: y})
-          debug_buffered char, print: true
+          tile =
+            if !decider.nil?
+              decider.call(tiles, {x: x, y: y})
+            elsif tiles.any?
+              tiles[0]
+            else
+              '?'
+            end
+          debug_buffered tile, print: true
         end
       end
 
