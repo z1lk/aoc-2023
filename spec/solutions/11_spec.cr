@@ -1,6 +1,6 @@
 require "../spec_helper"
 
-describe Aoc2023::Ten do
+describe Aoc2023::Eleven do
   describe "#part1" do
     it "equals" do
       day(11).example(1).should eq 374
