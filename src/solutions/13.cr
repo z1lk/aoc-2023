@@ -27,27 +27,23 @@ class Aoc2023::Thirteen < Aoc2023::Solution
       map.each do |c, t|
         map2 = map.clone
         map2.set(c, t == '#' ? '.' : '#')
-        xr2 = x_reflections(map2).reject { |r| r == xr }
-        xr2 = xr2.any? ? xr2.first : nil
+        xr2 = x_reflections(map2).reject(xr).shift?
         break if xr2
-        yr2 = y_reflections(map2).reject { |r| r == yr }
-        yr2 = yr2.any? ? yr2.first : nil
+        yr2 = y_reflections(map2).reject(yr).shift?
         break if yr2
       end
-      next (xr2 + 1) if xr2 && xr2 != xr
-      next (yr2 + 1) * 100 if yr2 && yr2 != yr
+      next (xr2 + 1) if xr2
+      next (yr2 + 1) * 100 if yr2
       raise "none found!"
     end
   end
 
   def x_reflection(map)
-    ref = x_reflections(map)
-    ref.first if ref.any?
+    x_reflections(map).shift?
   end
 
   def y_reflection(map)
-    ref = y_reflections(map)
-    ref.first if ref.any?
+    y_reflections(map).shift?
   end
 
   def x_reflections(map)
