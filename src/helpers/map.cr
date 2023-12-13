@@ -46,8 +46,8 @@ module Aoc2023
     def extend_bounds(c)
       #y_a = @map.keys
       #x_a = @map.values.map(&.keys).flatten.uniq
-      y_a = [c[:x], min_y, max_y]
-      x_a = [c[:y], min_x, max_x]
+      y_a = [c[:y], min_y, max_y]
+      x_a = [c[:x], min_x, max_x]
       @min_y = y_a.min
       @max_y = y_a.max
       @min_x = x_a.min
@@ -74,6 +74,22 @@ module Aoc2023
       @max_y = max_y
       @min_x = min_x
       @max_x = max_x
+    end
+
+    def rows(range)
+      range.each.map do |r|
+        min_x.to(max_x).map do |x|
+          get({x: x, y: r})
+        end.to_a
+      end.to_a
+    end
+
+    def cols(range)
+      range.each.map do |r|
+        min_y.to(max_y).map do |y|
+          get({x: r, y: y})
+        end.to_a
+      end.to_a
     end
 
     def get!(coord : Coord)

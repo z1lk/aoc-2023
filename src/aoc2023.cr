@@ -1,5 +1,5 @@
 def debug?
-  ENV.has_key?("DEBUG") && ENV["DEBUG"]
+  ENV.has_key?("DEBUG") && ENV["DEBUG"] != "false"
 end
 
 def debug(*args)

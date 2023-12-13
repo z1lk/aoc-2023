@@ -2,12 +2,12 @@ require "./src/aoc2023"
 require "option_parser"
 require "benchmark"
 
-ENV["DEBUG"] = "true"
-
-day_flag = -1
+day = -1
 part = 1
 input_type = :real
 input_ver = nil
+
+ENV["DEBUG"] = "false"
 
 OptionParser.parse do |parser|
   parser.on "-h", "--help", "Show help" do
@@ -15,7 +15,7 @@ OptionParser.parse do |parser|
     exit
   end
   parser.on("-d DAY", "--day DAY", "Day 1-25") do |d|
-    day_flag = d
+    day = d.to_i
   end
   parser.on("-p PART", "--part PART", "Part 1 or 2 (default 1)") do |p|
     part = p.to_i
@@ -29,31 +29,34 @@ OptionParser.parse do |parser|
   parser.on("-v VERSION", "--version VERSION", "Use a different version of the day's input (e.g. 01b)") do |ver|
     input_ver = ver
   end
+  parser.on("-D", "--debug", "Print debug lines") do
+    ENV["DEBUG"] = "true"
+  end
   #parser.on("-i INPUT", "--input INPUT", "Specify the input filename directly") do |ver|
   #  input_type = :filename
   #  input_ver = ver
   #end
 end
 
-if day_flag == -1
+if day == -1
   t = Time.local Time::Location.load("America/New_York")
   if t.year == 2023 && t.month == 12 && t.day <= 25
-    day_flag = t.day
+    day = t.day
   end
 end
 
-if day_flag == -1
+if day == -1
   STDERR.puts "Day must be specified with `-d DAY`"
   exit(1)
 end
 
-solution = day(day_flag)
+solution = day(day)
 header = [
-  "[Day #{day_flag}]",
+  "[Day #{day}]",
   "[Part #{part}]",
   "[Input type \"#{input_type}\"]"
 ]
-if input_ver != ""
+if input_ver.nil?
   header << "[Input version \"#{input_ver}\"]"
 end
 puts header.join(" "), ""
