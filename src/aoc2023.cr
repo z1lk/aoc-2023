@@ -2,6 +2,10 @@ def debug?
   ENV.has_key?("DEBUG") && ENV["DEBUG"] != "false"
 end
 
+def debug_line(*args, sep = '/')
+  debug args.join " #{sep} "
+end
+
 def debug(*args)
   puts *args if debug?
 end

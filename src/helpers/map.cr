@@ -119,6 +119,15 @@ module Aoc2023
       extend_bounds(coord)
     end
 
+    def swap(c : Coord, c2 : Coord)
+      t = get c
+      t2 = get c2
+      unset c, t
+      unset c2, t2
+      set c, t2
+      set c2, t
+    end
+
     def unset(coord : Coord, prune = true)
       x, y = coord[:x], coord[:y]
       return if map[y]?.nil?
@@ -173,6 +182,14 @@ module Aoc2023
       end
     end
 
+    def each(default : T | Nil = nil)
+      min_y.to(max_y) do |y|
+        min_x.to(max_x) do |x|
+          c = {x: x, y: y}
+          yield c, get(c, default)
+        end
+      end
+    end
     def add(a : Coord, b : Coord)
       { x: a[:x] + b[:x], y: a[:y] + b[:y] }
     end
