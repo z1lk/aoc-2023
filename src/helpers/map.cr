@@ -39,6 +39,10 @@ module Aoc2023
       @max_x = x_a.max
     end
 
+    def hash
+      @map.hash
+    end
+
     def ==(other : Map)
       @map == other.map
     end

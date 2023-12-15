@@ -2,48 +2,29 @@ class Aoc2023::Fourteen < Aoc2023::Solution
   def part1(lines)
     map = Parsers.map(lines)
     tilt map, Map::NORTH
-    load map
+    calc_load map
   end
 
   def part2(lines)
     map = Parsers.map(lines)
 
-    # 300 is a magical number that works for my input. TODO: refactor to keep cycling if repeat not found
-    loads = 300.times.map do |i|
+    repeat = period = -1
+
+    loads = [] of Int32
+    i = 0
+    loop do
       debug i
-      cycle map
-      load(map)
-    end.to_a
-
-    loads.each.with_index do |load, i|
-      debug_line i, load
-    end
-
-    # travel up to the load from the beginning of the list,
-    # looking back/forward to see if we are at a point where the pattern repeats
-    repeat = -1
-    period = -1
-    loads.each.with_index do |load, i|
-      (i+1).times do |n|
-        next unless n > 0
-        load_1 = loads[(i-n)..i]
-        load_2 = loads[(i+1)..(i+1+n)]
-        #debug_line load_1, load_2
-        if load_1 == load_2
-          repeat = i
-          period = n + 1
-          break
-        end
-      end
+      i += 1
+      spin_cycle map
+      loads << calc_load(map)
+      repeat, period = find_period loads
       break if repeat > -1
     end
 
-    raise "repeat not found" unless repeat > -1
-
     cycles = 1_000_000_000
 
-    start = repeat - period + 1
-    debug start, period
+    start = repeat - period + 2
+    debug_line start, period
 
     repeat_pat = loads[start..(start + period - 1)]
     debug repeat_pat
@@ -52,7 +33,19 @@ class Aoc2023::Fourteen < Aoc2023::Solution
     repeat_pat[offset]
   end
 
-  def load(map)
+  def find_period(loads)
+    loads.each.with_index do |load, i|
+      (i+1).times do |n|
+        next unless n > 0
+        load_1 = loads[(i-n)..i]
+        load_2 = loads[(i+1)..(i+1+n)]
+        return { i, n + 1 } if load_1 == load_2
+      end
+    end
+    { -1, -1 }
+  end
+
+  def calc_load(map)
     map.find_all('O').sum do |c|
       map.max_y - c[:y] + 1
     end
@@ -87,7 +80,7 @@ class Aoc2023::Fourteen < Aoc2023::Solution
     end
   end
 
-  def cycle(map)
+  def spin_cycle(map)
     tilt map, Map::NORTH
     tilt map, Map::WEST
     tilt map, Map::SOUTH
