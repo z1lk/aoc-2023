@@ -56,7 +56,7 @@ header = [
   "[Part #{part}]",
   "[Input type \"#{input_type}\"]"
 ]
-if input_ver.nil?
+if !input_ver.nil?
   header << "[Input version \"#{input_ver}\"]"
 end
 puts header.join(" "), ""

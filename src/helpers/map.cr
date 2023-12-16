@@ -248,7 +248,7 @@ module Aoc2023
       clear = true,
       interval = 0.1,
       outside_bounds = false,
-      resolver : Proc(Array(T), Coord, T) | Nil = nil
+      resolver : Proc(Coord, T | Nil, T | Nil) | Nil = nil
     )
 
       if width && height
@@ -298,7 +298,7 @@ module Aoc2023
           t = get({x: x, y: y})
           t =
             if !resolver.nil?
-              resolver.call(t, {x: x, y: y})
+              resolver.call({x: x, y: y}, t)
             else t
               t ? t : '?'
             end
