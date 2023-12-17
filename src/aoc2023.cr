@@ -1,3 +1,7 @@
+def debug
+  yield if debug
+end
+
 def debug?
   ENV.has_key?("DEBUG") && ENV["DEBUG"] != "false"
 end
@@ -76,12 +80,17 @@ require "./solution"
 require "./solutions/*"
 require "./helpers/*"
 
-def day_class(i)
-  Aoc2023::Solution.all.find { |s| s.day_int_padded == i.to_s.rjust(2, '0') }
+def day_class(i, variant = nil)
+  days = Aoc2023::Solution.all.select { |s| s.day_int_padded == i.to_s.rjust(2, '0') }
+  if variant
+    days.find { |s| s.variant == variant } 
+  else
+    days.first
+  end
 end
 
-def day(i)
-  klass = day_class(i)
-  raise "day \"#{i}\" not found" unless klass
+def day(i, variant = nil)
+  klass = day_class(i, variant)
+  raise "day \"#{i}\" (variant \"#{variant}\") not found" unless klass
   klass.new
 end

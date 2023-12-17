@@ -1,10 +1,10 @@
 module Aoc2023
   alias Coord = NamedTuple(x: Int32, y: Int32)
 
-  UNREACHABLE = Int32::MAX
-
   class Map(T)
     def_clone
+
+    UNREACHABLE = Int32::MAX
 
     NORTH = {x: +0, y: -1}
     EAST  = {x: +1, y: +0}
@@ -248,7 +248,7 @@ module Aoc2023
       clear = true,
       interval = 0.1,
       outside_bounds = false,
-      resolver : Proc(Coord, T | Nil, T | Nil) | Nil = nil
+      resolver : Proc(Coord, T | Nil, Char | Nil) | Nil = nil
     )
 
       if width && height
@@ -300,7 +300,7 @@ module Aoc2023
             if !resolver.nil?
               resolver.call({x: x, y: y}, t)
             else t
-              t ? t : '?'
+              t ? t.to_s.chars[0] : '?'
             end
           debug_buffered t, print: true
         end

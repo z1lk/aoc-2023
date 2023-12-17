@@ -6,6 +6,7 @@ day = -1
 part = 1
 input_type = :real
 input_ver = nil
+variant = nil
 
 ENV["DEBUG"] = "false"
 
@@ -26,17 +27,21 @@ OptionParser.parse do |parser|
   parser.on("-e", "--example", "Use the day's example input") do
     input_type = :example
   end
-  parser.on("-v VERSION", "--version VERSION", "Use a different version of the day's input (e.g. 01b)") do |ver|
+  parser.on("-i VERSION", "--input VERSION", "Use a different version of the day's input (e.g. 01b)") do |ver|
     input_ver = ver
   end
   parser.on("-D", "--debug", "Print debug lines") do
     ENV["DEBUG"] = "true"
+  end
+  parser.on("-v", "--variant VARIANT", "Use a particular variant of the day's solution") do |var|
+    variant = var
   end
   #parser.on("-i INPUT", "--input INPUT", "Specify the input filename directly") do |ver|
   #  input_type = :filename
   #  input_ver = ver
   #end
 end
+
 
 if day == -1
   t = Time.local Time::Location.load("America/New_York")
@@ -50,7 +55,8 @@ if day == -1
   exit(1)
 end
 
-solution = day(day)
+solution = day(day, variant)
+
 header = [
   "[Day #{day}]",
   "[Part #{part}]",

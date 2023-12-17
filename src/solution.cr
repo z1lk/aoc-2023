@@ -1,5 +1,9 @@
 module Aoc2023
   abstract class Solution
+    def self.variant
+      nil
+    end
+
     def self.all
       {{@type.all_subclasses}}
     end
