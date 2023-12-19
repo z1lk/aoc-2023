@@ -150,14 +150,11 @@ class Aoc2023::Seventeen < Aoc2023::Solution
         n = map.add(cur[0],dir)
         { n, map.get(n), dir }
       end
-      #map.neighbors(cur[0]).each do |(c,t)|
       neighbors.each do |(c,t,dir)|
         next if c.in?(cur[4]) # neighbor is in path
         next if t.nil? # outside map
-        #next if map.add(cur[2], dir) == { x: 0, y: 0 } # went way we came
         loss = cur[1] + t
         next unless loss < best
-        #dir = map.diff c, cur[0]
         streak = dir == cur[2] ? cur[3] + 1 : 1
         next if streak > 10
         # must go at least 4 before can go in other direction

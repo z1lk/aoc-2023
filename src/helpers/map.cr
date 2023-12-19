@@ -194,12 +194,25 @@ module Aoc2023
         end
       end
     end
-    def add(a : Coord, b : Coord)
+
+    def self.product(a : Coord, s : Int32)
+      { x: a[:x] * s, y: a[:y] * s }
+    end
+
+    def self.add(a : Coord, b : Coord)
       { x: a[:x] + b[:x], y: a[:y] + b[:y] }
     end
 
-    def diff(a : Coord, b : Coord)
+    def add(a : Coord, b : Coord)
+      self.class.add(a,b)
+    end
+
+    def self.diff(a : Coord, b : Coord)
       { x: a[:x] - b[:x], y: a[:y] - b[:y] }
+    end
+
+    def diff(a : Coord, b : Coord)
+      self.class.diff(a, b)
     end
 
     ADJ = [
