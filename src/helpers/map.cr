@@ -164,6 +164,13 @@ module Aoc2023
       end
     end
 
+    def find!(tile : T)
+      each do |c, t|
+        return c if tile == t
+      end
+      raise "couldn't find '#{tile}'!"
+    end
+
     def find_all(tile : T)
       coords = [] of Coord
       each do |c, t|
