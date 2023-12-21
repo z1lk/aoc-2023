@@ -1,5 +1,9 @@
+def debug_off
+  yield if false
+end
+
 def debug
-  yield if debug
+  yield if debug?
 end
 
 def debug?
