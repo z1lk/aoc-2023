@@ -254,8 +254,12 @@ module Aoc2023
     end
 
     # taxicab dist
-    def dist(a, b)
+    def self.dist(a, b)
       (a[:x] - b[:x]).abs + (a[:y] - b[:y]).abs
+    end
+
+    def dist(a, b)
+      self.class.dist(a, b)
     end
 
     def draw(
