@@ -45,6 +45,7 @@ class Aoc2023::TwentyOne < Aoc2023::Solution
     property containers : Array(MapContainer)
 
     property hist : Array(Int32) = [] of Int32
+    property? overflow : Bool = true
 
     def initialize(@coord, @blank, @containers, @created_at)
       @map = @blank.clone
@@ -52,6 +53,7 @@ class Aoc2023::TwentyOne < Aoc2023::Solution
       @ring = Map.dist(@coord, {x: 0, y: 0})
       @containers << self
       @hist = [] of Int32
+      @overflow = true
     end
 
     def finished?
@@ -68,70 +70,66 @@ class Aoc2023::TwentyOne < Aoc2023::Solution
 
     def get_up(step)
       if up = self.up
-        return up
+        return up 
       end
-      if m = left.try(&.up).try(&.right)
-        self.up = m
-      elsif m = right.try(&.up).try(&.left)
-        self.up = m
-      else
-        c = Map.add(coord, Map::NORTH)
-        self.up = MapContainer.new(c, blank.clone, containers, step)
-      end
-      up = self.up
+      c = Map.add(coord, Map::NORTH)
+      up =
+        if mc = containers.find { |mc| mc.coord == c }
+          mc
+        else
+          MapContainer.new(c, blank.clone, containers, step)
+        end
       raise "up not found" unless up
       up.down = self
+      self.up = up
       up
     end
     def get_right(step)
       if right = self.right
-        return right
+        return right 
       end
-      if m = up.try(&.right).try(&.down)
-        self.right = m
-      elsif m = down.try(&.right).try(&.up)
-        self.right = m
-      else
-        c = Map.add(coord, Map::EAST)
-        self.right = MapContainer.new(c, blank.clone, containers, step)
-      end
-      right = self.right
+      c = Map.add(coord, Map::EAST)
+      right =
+        if mc = containers.find { |mc| mc.coord == c }
+          mc
+        else
+          MapContainer.new(c, blank.clone, containers, step)
+        end
       raise "right not found" unless right
       right.left = self
+      self.right = right
       right
     end
     def get_down(step)
       if down = self.down
-        return down
+        return down 
       end
-      if m = left.try(&.down).try(&.right)
-        self.down = m
-      elsif m = right.try(&.down).try(&.left)
-        self.down = m
-      else
-        c = Map.add(coord, Map::SOUTH)
-        self.down = MapContainer.new(c, blank.clone, containers, step)
-      end
-      down = self.down
+      c = Map.add(coord, Map::SOUTH)
+      down =
+        if mc = containers.find { |mc| mc.coord == c }
+          mc
+        else
+          MapContainer.new(c, blank.clone, containers, step)
+        end
       raise "down not found" unless down
       down.up = self
+      self.down = down
       down
     end
     def get_left(step)
       if left = self.left
-        return left
+        return left 
       end
-      if m = down.try(&.left).try(&.up)
-        self.left = m
-      elsif m = up.try(&.left).try(&.down)
-        self.left = m
-      else
-        c = Map.add(coord, Map::WEST)
-        self.left = MapContainer.new(c, blank.clone, containers, step)
-      end
-      left = self.left
+      c = Map.add(coord, Map::WEST)
+      left =
+        if mc = containers.find { |mc| mc.coord == c }
+          mc
+        else
+          MapContainer.new(c, blank.clone, containers, step)
+        end
       raise "left not found" unless left
       left.right = self
+      self.left = left
       left
     end
 
@@ -142,7 +140,7 @@ class Aoc2023::TwentyOne < Aoc2023::Solution
           next if t == '#'
           if map.in_bounds?(d)
             map2.set(d, 'O')
-          else
+          elsif overflow?
             if d[:x] < map.min_x
               left = get_left(step)
               next if left.finished?
@@ -170,10 +168,13 @@ class Aoc2023::TwentyOne < Aoc2023::Solution
     end
 
     def step(n)
-      return if finished?
-      self.map = map2
-      hist << reachable.size
-      self.map2 = blank.clone
+      if finished?
+        hist << hist[-2]
+      else
+        self.map = map2
+        hist << reachable.size
+        self.map2 = blank.clone
+      end
     end
 
     def reachable2
@@ -198,28 +199,72 @@ class Aoc2023::TwentyOne < Aoc2023::Solution
     blank = map.clone
     blank.set(start, '.')
     containers = [] of MapContainer
+
+    tmp = MapContainer.new({x: 0, y: 0}, blank, containers, 0)
+    tmp.map.set(start, 'O')
+    tmp.overflow = false
+    i = 1
+    loop do
+      tmp.build(i)
+      tmp.step(i)
+      if tmp.hist.size > 3 
+        if tmp.hist[-1] == tmp.hist[-3] && tmp.hist[-2] == tmp.hist[-4]
+          tmp.finished!(i) 
+          break
+        end
+      end
+      i += 1
+    end
+    puts tmp.hist
+    tmp_hist = tmp.hist.dup
+    max = tmp.hist.max
+    tmp_hist.pop unless tmp_hist[-1] == max
+    max_prev = tmp_hist[-2]
+    raise "max and max_prev same" if max == max_prev
+
+    #stop_step = 5000
+    stop_step = 26501365
+
+    even_ring_finish_count, odd_ring_finish_count =
+      if (tmp.hist.index!(max) + 1).even? && stop_step.even?
+        { max, max_prev }
+      else
+        { max_prev, max }
+      end
+
+    debug_line "even_ring_finish_count", even_ring_finish_count 
+    debug_line "odd_ring_finish_count", odd_ring_finish_count 
+
+    containers.clear
+
     cont = MapContainer.new({x: 0, y: 0}, blank, containers, 0)
     cont.map.set(start, 'O')
-    steps = 26501365
+
+    #steps = 26501365
     #steps = 50
     #reachable = [1]
     ring_start = Hash(Int32, Int32).new
     ring_finish = Hash(Int32, Int32).new
-    steps.times do |step|
+    step = 0
+    # steps.times do |step|
+    loop do
       step = step + 1
       debug_line "step", step
       containers.each { |mc| mc.build(step) }# (&.build)
       containers.each { |mc| mc.step(step) }
-      if step.even? == steps.even?
+      #if step.even? == steps.even?
         containers.each do |mc|
           next if mc.finished?
-          next unless mc.hist.size > 3
-          mc.finished!(step) if mc.hist[-1] == mc.hist[-3] && mc.hist[-2] == mc.hist[-4]
+          next unless mc.hist.size > 3 # enough to repeat twice
+          next unless mc.hist[-1] == mc.hist[-3] && mc.hist[-2] == mc.hist[-4] # started repeating
+          if mc.ring.even? && mc.hist[-1] == even_ring_finish_count || mc.ring.odd? && mc.hist[-1] == odd_ring_finish_count
+            mc.finished!(step)
+          end
         end
-      end
+      #end
       #reachable << containers.sum { |mc| mc.reachable.size }
       draw_containers(containers)
-      stop_ring = 5
+      stop_ring = 3
       ring_mc = containers.select { |mc| mc.ring == stop_ring }
       if ring_size(stop_ring) == ring_mc.size && ring_mc.all?(&.finished?)
         break
@@ -290,44 +335,65 @@ class Aoc2023::TwentyOne < Aoc2023::Solution
     #debug_line "bl_offset", bl_offset
     #debug_line "br_offset", br_offset
 
-    n = 5000
-    ring_started = simulate_continuous ring_start, n
-    ring_finished = simulate_continuous ring_finish, n
+    last_ring_started = simulate_continuous ring_start, stop_step
+    #last_ring_finished = simulate_continuous ring_finish, stop_step
+    raise "no ring started" if last_ring_started.nil?
+    # fake it?
+    last_ring_finished = last_ring_started - 3
+    raise "no ring finished" if last_ring_finished.nil?
 
-    #raise "no ring started" if ring_started.nil?
-    #raise "no ring finished" if ring_finished.nil?
+    debug_line "stop_step", stop_step
+    debug_line "last_ring_started", last_ring_started
 
-    debug_line "step", n
-    debug_line "ring started", ring_started
-    debug_line "ring finished", ring_finished
-    same_finish_count = containers.find! { |mc| mc.coord == {x: 0, y: 0} }.reachable.size
-    other_finish_count = containers.find! { |mc| mc.coord == {x: -1, y: 0} }.reachable.size
-    debug_line "same_finish_count", same_finish_count
-    debug_line "other_finish_count", other_finish_count
-    
-    inner = 0
-    if ring_finished
-      0_i128.to(ring_finished).sum do |r|
-        count = r.even? ? same_finish_count : other_finish_count
-        ring_size(r).to_i128 * count
-      end
+    debug_line "last_ring_finished", last_ring_finished
+
+    if last_ring_finished > last_ring_started
+      raise "last_ring_finished (#{last_ring_finished}) > last_ring_started (#{last_ring_started})" 
     end
 
     outer_start = 0
-    if ring_finished
-      outer_start = (ring_finished + 1)
+    if last_ring_finished
+      outer_start = last_ring_finished + 1
     end
 
-    raise "no ring started" if ring_started.nil?
+    if outer_start > last_ring_started
+      raise "outer_start (#{outer_start}) > last_ring_started (#{last_ring_started})" 
+    end
 
-    puts "***"
-    puts outer_start
-    puts ring_started
-    puts "***"
+    #raise "no ring started" if last_ring_started.nil?
+    #raise "no ring finished" if last_ring_finished.nil?
+    #same_finish_count = containers.find! { |mc| mc.coord == {x: 0, y: 0} }.reachable.size
+    #other_finish_count = containers.find! { |mc| mc.coord == {x: -1, y: 0} }.reachable.size
+    #debug_line "same_finish_count", same_finish_count
+    #debug_line "other_finish_count", other_finish_count
 
-    outer = outer_start.to(ring_started).sum do |r|
+    #center_finish_count, other_finish_count =
+    #  if cont.hist.index!(max).even? && stop_step.even?
+    #    { max, max_prev }
+    #  else
+    #    { max_prev, max }
+    #  end
+
+    inner = 0
+    if last_ring_finished
+      inner = 0_i128.to(last_ring_finished).sum do |r|
+        count = r.even? ? even_ring_finish_count : odd_ring_finish_count #center_finish_count : other_finish_count
+        size = ring_size(r)
+        total = size.to_i128 * count
+        #debug_line "ring", r, "size", size, "count", count, "total", total
+        total
+      end
+    end
+
+    #puts "***"
+    #puts outer_start
+    #puts last_ring_started
+    #puts "***"
+
+    outer_rings = outer_start.to(last_ring_started).to_a
+    outers = outer_rings.map do |r|
       ring_start_step = get_step ring_start, r
-      state = n - ring_start_step
+      state = stop_step - ring_start_step
       #debug_line "ring_start_step", ring_start_step
       #debug_line "state", state
       [
@@ -340,29 +406,44 @@ class Aoc2023::TwentyOne < Aoc2023::Solution
         {bl_hist, bl_offset, r-1},
         {br_hist, br_offset, r-1}
       ].sum do |(hist, offset, times)|
-        offset_state = state - offset
         next 0 if times < 1 # ring 0 
-        next 0 if offset_state < 0
+        offset_state = state - offset
+        next 0 if offset_state < 0 # not started yet
         #debug "--------"
         #debug hist
         #debug offset_state
         #v = hist[offset_state] * times
         #debug v
         #v
+        if hist[-1] == max
+          100.times do
+            hist << max_prev
+            hist << max
+          end
+        end
         #debug "---"
-        #debug_line "hist", hist.size
+        #debug_line "stop_step", stop_step
+        #debug_line "ring_start_step", ring_start_step
         #debug_line "state", state
+        #debug_line "hist", hist
+        #debug_line "hist.size", hist.size
         #debug_line "offset", offset
         #debug_line "offset_state", offset_state
         #debug "---"
-        hist[offset_state] * times
+        #puts offset_state
+        hist[offset_state].to_i128 * times
       end
     end
+    outer_rings.each.with_index do |r, i|
+      debug_line "outer_ring", r, "count", outers[i]
+    end
+
+    outer = outers.sum
 
     debug_line "inner", inner
     debug_line "outer", outer
 
-    debug inner + outer
+    inner + outer
 
     #debug "---"
     #debug simulate_continuous ring_start, 65
@@ -398,12 +479,13 @@ class Aoc2023::TwentyOne < Aoc2023::Solution
     last_k = hash.keys[-1]
     last_v = hash.values[-1]
     return nil if m < hash.values[0]
+    debug_line "last_k", last_k
+    debug_line "last_v", last_v
     if m < last_v
       hash.find! do |k,v|
         m >= v
       end[0]
     end
-    puts "HERE"
     r = (m - last_v) // v_diff
     r + last_k
   end
