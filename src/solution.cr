@@ -1,5 +1,8 @@
 module Aoc2023
   abstract class Solution
+    property input_type : Symbol | Nil
+    property input_ver : String | Nil
+
     def self.variant
       nil
     end
@@ -63,6 +66,8 @@ module Aoc2023
     abstract def part2(lines)
 
     def solve(part : Int32, input_type = :real, input_ver = nil)
+      @input_type = input_type
+      @input_ver = input_ver
       input = 
         case input_type
         when :real then real_input(input_ver)
